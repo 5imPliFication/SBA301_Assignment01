@@ -2,8 +2,10 @@ package fpt.he190091.assignment01.service;
 
 import fpt.he190091.assignment01.dtos.CreateAccountRequest;
 import fpt.he190091.assignment01.dtos.LoginRequest;
-import fpt.he190091.assignment01.dtos.SystemAccountDTO;
+import fpt.he190091.assignment01.dtos.SystemAccountResponse;
 import fpt.he190091.assignment01.dtos.UpdateAccountRequest;
+import fpt.he190091.assignment01.entity.SystemAccount;
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,15 +13,15 @@ import java.util.Optional;
 
 @Service
 public interface SystemAccountService {
-    List<SystemAccountDTO> getAllAccount();
+    List<SystemAccount> getAllAccount();
 
-    Optional<SystemAccountDTO> findByAccountID(Long accountID);
+    SystemAccount findByAccountID(Long accountID);
 
-    Optional<SystemAccountDTO> findByAccountName(String accountName);
+    SystemAccount findByAccountName(String accountName, Limit lim);
 
-    SystemAccountDTO createSystemAccount(CreateAccountRequest systemAccount);
-    SystemAccountDTO updateSystemAccount(Long id, UpdateAccountRequest updatedAccount);
+    SystemAccount createSystemAccount(CreateAccountRequest systemAccount);
+    SystemAccount updateSystemAccount(Long id, UpdateAccountRequest updatedAccount);
     void deleteSystemAccount(Long accountID);
 
-    Optional<SystemAccountDTO> login(LoginRequest loginRequest);
+    Optional<SystemAccount> login(LoginRequest loginRequest);
 }

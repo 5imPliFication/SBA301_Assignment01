@@ -1,108 +1,89 @@
 package fpt.he190091.assignment01.service.serviceImpl;
 
-import fpt.he190091.assignment01.config.PasswordUtil;
 import fpt.he190091.assignment01.dtos.CreateAccountRequest;
 import fpt.he190091.assignment01.dtos.LoginRequest;
-import fpt.he190091.assignment01.dtos.SystemAccountDTO;
 import fpt.he190091.assignment01.dtos.UpdateAccountRequest;
 import fpt.he190091.assignment01.entity.SystemAccount;
-import fpt.he190091.assignment01.mapper.SystemAccountMapper;
 import fpt.he190091.assignment01.repository.SystemAccountRepository;
 import fpt.he190091.assignment01.service.SystemAccountService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
-@Service
 @RequiredArgsConstructor
+@Service
 public class SystemAccountServiceImpl implements SystemAccountService {
 
-    private final SystemAccountRepository systemAccountRepository;
+    private final SystemAccountRepository accountRepo;
 
     @Override
-    public List<SystemAccountDTO> getAllAccount() {
-        return systemAccountRepository.findAll()
-                .stream()
-                .map(SystemAccountMapper::toDTO)
-                .toList();
+    public List<SystemAccount> getAllAccount() {
+        return accountRepo.findAll();
     }
 
     @Override
-    public Optional<SystemAccountDTO> findByAccountID(Long accountID) {
-        return systemAccountRepository.findById(accountID)
-                .map(SystemAccountMapper::toDTO);
+    public SystemAccount findByAccountID(Long accountID) {
+        return accountRepo.findById(accountID).orElse(null);
     }
 
     @Override
-    public Optional<SystemAccountDTO> findByAccountName(String accountName) {
-        return systemAccountRepository.findByAccountName(accountName)
-                .map(SystemAccountMapper::toDTO);
+    public SystemAccount findByAccountName(String accountName, Limit limit) {
+        return accountRepo.findSystemAccountByAccountNameContaining(accountName, limit).orElse(null);
     }
 
     @Override
-    public SystemAccountDTO createSystemAccount(CreateAccountRequest systemAccount) {
-        if (systemAccountRepository.existsByAccountEmail(systemAccount.getEmail())) {
-            throw new RuntimeException("Email already exists");
-        }
-        SystemAccount entity = new SystemAccount();
-        entity.setAccountName(systemAccount.getName());
-        entity.setAccountEmail(systemAccount.getEmail());
-        entity.setAccountRole(systemAccount.getRole());
-        entity.setAccountPassword(
-                PasswordUtil.hashPassword(systemAccount.getPassword())
-        );
-
-        return SystemAccountMapper.toDTO(systemAccountRepository.save(entity));
+    public SystemAccount createSystemAccount(CreateAccountRequest dto) {
+        SystemAccount acc = new SystemAccount();
+        acc.setAccountName(dto.getName());
+        acc.setAccountEmail(dto.getEmail());
+        acc.setAccountPassword(dto.getPassword());
+        acc.setAccountRole(dto.getRole());
+        return accountRepo.save(acc);
     }
 
     @Override
-    public SystemAccountDTO updateSystemAccount(Long id, UpdateAccountRequest updatedAccount) {
-        SystemAccount existing = systemAccountRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Account not found"));
-        existing.setAccountName(updatedAccount.getName());
-        existing.setAccountRole(updatedAccount.getRole());
-        if (updatedAccount.getName() != null && !updatedAccount.getName().isEmpty()) {
-            existing.setAccountName(updatedAccount.getName());
-        }
-        if (updatedAccount.getRole() != null) {
-            existing.setAccountRole(updatedAccount.getRole());
-        }
+    public SystemAccount updateSystemAccount(Long id, UpdateAccountRequest dto) {
+        SystemAccount acc = accountRepo.findById(id).orElse(null);
+        if (acc == null) return null;
 
-        // Email change check
-        if (!existing.getAccountEmail().equals(updatedAccount.getEmail())) {
-            if (systemAccountRepository.existsByAccountEmail(updatedAccount.getEmail())) {
-                throw new RuntimeException("Email already exists");
-            }
-            existing.setAccountEmail(updatedAccount.getEmail());
-        }
+        if (dto.getName() != null)
+            acc.setAccountName(dto.getName());
 
-        // Update password only if provided
-        if (updatedAccount.getPassword() != null &&
-                !updatedAccount.getPassword().isBlank()) {
+        if (dto.getEmail() != null)
+            acc.setAccountEmail(dto.getEmail());
 
-            existing.setAccountPassword(
-                    PasswordUtil.hashPassword(updatedAccount.getPassword())
-            );
-        }
+        if (dto.getPassword() != null)
+            acc.setAccountPassword(dto.getPassword());
 
-        return SystemAccountMapper.toDTO(systemAccountRepository.save(existing));
+        if (dto.getRole() != null)
+            acc.setAccountRole(dto.getRole());
+
+        return accountRepo.save(acc);
     }
 
     @Override
     public void deleteSystemAccount(Long accountID) {
-        systemAccountRepository.deleteById(accountID);
+        accountRepo.deleteById(accountID);
     }
 
     @Override
-    public Optional<SystemAccountDTO> login(LoginRequest request) {
+    public Optional<SystemAccount> login(LoginRequest loginRequest) {
+        Optional<SystemAccount> opt =
+                accountRepo.findByAccountEmail(loginRequest.getEmail());
 
-        return systemAccountRepository.findByAccountEmail(request.getEmail())
-                .filter(acc -> PasswordUtil.checkPassword(
-                        request.getPassword(),
-                        acc.getAccountPassword()
-                ))
-                .map(SystemAccountMapper::toDTO);
+        if (opt.isEmpty()) {
+            System.err.println(loginRequest.getEmail() + " not found");
+            return Optional.empty();
+        }
+        SystemAccount acc = opt.get();
+
+        if (!acc.getAccountPassword().equals(loginRequest.getPassword())) {
+            System.err.println("Wrong Password");
+            return Optional.empty();
+        }
+        return Optional.of(acc);
     }
 }

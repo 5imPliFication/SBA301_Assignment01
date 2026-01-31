@@ -1,6 +1,7 @@
 package fpt.he190091.assignment01.repository;
 
 import fpt.he190091.assignment01.entity.SystemAccount;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,4 +16,6 @@ public interface SystemAccountRepository extends JpaRepository<SystemAccount, Lo
     boolean existsByAccountEmail(String accountEmail);
 
     Optional<SystemAccount> findByAccountEmail(String accountEmail);
+
+    Optional<SystemAccount> findSystemAccountByAccountNameContaining(String accountName, Limit limit);
 }

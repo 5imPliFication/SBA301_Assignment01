@@ -2,52 +2,50 @@ package fpt.he190091.assignment01.controller;
 
 import fpt.he190091.assignment01.dtos.CreateAccountRequest;
 import fpt.he190091.assignment01.dtos.LoginRequest;
-import fpt.he190091.assignment01.dtos.SystemAccountDTO;
+import fpt.he190091.assignment01.dtos.SystemAccountResponse;
 import fpt.he190091.assignment01.dtos.UpdateAccountRequest;
-import fpt.he190091.assignment01.entity.SystemAccount;
+import fpt.he190091.assignment01.mapper.SystemAccountMapper;
 import fpt.he190091.assignment01.service.SystemAccountService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Limit;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("api/accounts")
 @RequiredArgsConstructor
 public class SystemAccountController {
     private final SystemAccountService systemAccountService;
+    private final SystemAccountMapper mapper;
 
     @GetMapping
-    public List<SystemAccountDTO> getAllSystemAccount() {
-        return systemAccountService.getAllAccount();
+    public List<SystemAccountResponse> getAllSystemAccount() {
+        return mapper.toResponseList(systemAccountService.getAllAccount());
     }
 
     @GetMapping("/{accountId}")
-    public ResponseEntity<?> getById(@PathVariable Long id) {
-        return systemAccountService.findByAccountID(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public SystemAccountResponse getById(@PathVariable Long accountId) {
+        return mapper.toResponse(systemAccountService.findByAccountID(accountId));
     }
 
-    @PostMapping("/{accountName}")
-    public ResponseEntity<?> getById(@PathVariable String name) {
-        return systemAccountService.findByAccountName(name)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    @GetMapping("/by-name/{accountName}")
+    public SystemAccountResponse getById(@PathVariable String accountName) {
+        return mapper.toResponse(systemAccountService.findByAccountName(accountName, Limit.of(10)));
     }
 
-    @PostMapping()
-    public ResponseEntity<?> createAccount(@RequestBody CreateAccountRequest request) {
-        return ResponseEntity.ok(systemAccountService.createSystemAccount(request));
+    @PostMapping
+    public SystemAccountResponse createAccount(@RequestBody CreateAccountRequest request) {
+        return mapper.toResponse(systemAccountService.createSystemAccount(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateAccount(
+    public SystemAccountResponse updateAccount(
             @PathVariable Long id,
             @RequestBody UpdateAccountRequest account) {
-        return ResponseEntity.ok(systemAccountService.updateSystemAccount(id, account));
+        return mapper.toResponse(systemAccountService.updateSystemAccount(id, account));
     }
 
     @DeleteMapping("/{id}")
@@ -57,9 +55,14 @@ public class SystemAccountController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        return systemAccountService.login(request)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(401).body(null));
+    public ResponseEntity<?> login(@RequestBody LoginRequest req,
+                                   HttpSession session) {
+
+        return systemAccountService.login(req)
+                .map(acc -> {
+                    session.setAttribute("user", acc);
+                    return ResponseEntity.ok("Login success");
+                })
+                .orElse(ResponseEntity.status(401).body("Invalid credentials"));
     }
 }
