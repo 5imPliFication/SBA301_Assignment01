@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -55,9 +56,9 @@ public class NewsArticle {
 
     @ManyToMany
     @JoinTable(
-            name = "NewsTag",
-            joinColumns = @JoinColumn(name = "NewsArticleID"),
-            inverseJoinColumns = @JoinColumn(name = "TagID")
+            name = "News_Tag",
+            joinColumns = @JoinColumn(name = "NewsArticle_Id"),
+            inverseJoinColumns = @JoinColumn(name = "Tag_Id")
     )
-    private Set<Tag> tags;
+    private Set<Tag> tags = new HashSet<>();
 }

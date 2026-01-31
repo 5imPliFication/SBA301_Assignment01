@@ -18,14 +18,20 @@ public class TagMapper {
         res.setTagName(tag.getTagName());
         res.setNote(tag.getNote());
 
-        if (tag.getNewsArticles() != null) {
-            res.setNewsArticleIds(
-                    tag.getNewsArticles()
-                            .stream()
-                            .map(NewsArticle::getNewsArticleID)
-                            .toList()
-            );
-        } else {
+        // Safe lazy loading handling
+        try {
+            if (tag.getNewsArticles() != null) {
+                res.setNewsArticleIds(
+                        tag.getNewsArticles()
+                                .stream()
+                                .map(NewsArticle::getNewsArticleID)
+                                .toList()
+                );
+            } else {
+                res.setNewsArticleIds(List.of());
+            }
+        } catch (Exception e) {
+            // Handle lazy loading exception
             res.setNewsArticleIds(List.of());
         }
 

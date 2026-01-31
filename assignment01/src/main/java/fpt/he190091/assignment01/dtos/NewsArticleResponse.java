@@ -2,6 +2,7 @@ package fpt.he190091.assignment01.dtos;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -14,6 +15,12 @@ public class NewsArticleResponse {
     private Boolean newsStatus;
 
     private Long categoryId;
+    private String categoryName;
+    private String authorName;
+
+    private LocalDateTime createdDate;
+    private LocalDateTime modifiedDate;
+
     private List<Long> tagIds;
-    private Long authorId;
+    private List<String> tagNames;
 }

@@ -1,18 +1,22 @@
 package fpt.he190091.assignment01.service.serviceImpl;
 
 import fpt.he190091.assignment01.dtos.NewsArticleRequest;
+import fpt.he190091.assignment01.entity.Category;
 import fpt.he190091.assignment01.entity.NewsArticle;
 import fpt.he190091.assignment01.entity.SystemAccount;
+import fpt.he190091.assignment01.entity.Tag;
 import fpt.he190091.assignment01.repository.CategoryRepository;
 import fpt.he190091.assignment01.repository.NewsArticleRepository;
 import fpt.he190091.assignment01.repository.TagRepository;
 import fpt.he190091.assignment01.service.NewsArticleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
@@ -23,12 +27,13 @@ public class NewsArticleServiceImpl implements NewsArticleService {
 
     @Override
     public List<NewsArticle> findAllNewsArticles() {
-        return articleRepo.findAll();
+        return articleRepo.findAllWithRelations(); // Use JOIN FETCH
     }
 
     @Override
     public NewsArticle findById(Long id) {
-        return articleRepo.findById(id).orElse(null);
+        return articleRepo.findByIdWithRelations(id) // Use JOIN FETCH
+                .orElseThrow(() -> new RuntimeException("Article not found"));
     }
 
     @Override
@@ -47,43 +52,54 @@ public class NewsArticleServiceImpl implements NewsArticleService {
             news.setCategory(categoryRepo.findById(dto.getCategoryId()).orElse(null));
         }
 
-        if (dto.getTagIds() != null) {
-            news.setTags(new HashSet<>(tagRepo.findAllById(dto.getTagIds())));
+        // Set tags
+        if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
+            Set<Tag> tags = new HashSet<>();
+            for (Long tagId : dto.getTagIds()) {
+                Tag tag = tagRepo.findById(tagId)
+                        .orElseThrow(() -> new RuntimeException("Tag not found: " + tagId));
+                tags.add(tag);
+            }
+            news.setTags(tags);
         }
 
         return articleRepo.save(news);
     }
 
+    @Transactional
     @Override
-    public NewsArticle updateNewsArticle(Long id, NewsArticleRequest dto, SystemAccount updater) {
-        NewsArticle news = findById(id);
-        if (news == null) return null;
+    public NewsArticle updateNewsArticle(Long id, NewsArticleRequest request, SystemAccount author) {
+        NewsArticle article = findById(id); // This uses JOIN FETCH
 
-        if (dto.getNewsTitle() != null)
-            news.setNewsTitle(dto.getNewsTitle());
+        article.setNewsTitle(request.getNewsTitle());
+        article.setHeadline(request.getHeadline());
+        article.setNewsContent(request.getNewsContent());
+        article.setNewsSource(request.getNewsSource());
+        article.setNewsStatus(request.getNewsStatus());
 
-        if (dto.getHeadline() != null)
-            news.setHeadline(dto.getHeadline());
+        // Update category
+        if (request.getCategoryId() != null) {
+            Category category = categoryRepo.findById(request.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+            article.setCategory(category);
+        }
 
-        if (dto.getNewsContent() != null)
-            news.setNewsContent(dto.getNewsContent());
+        // IMPORTANT: Clear and update tags properly
+        if (article.getTags() == null) {
+            article.setTags(new HashSet<>());
+        }
 
-        if (dto.getNewsSource() != null)
-            news.setNewsSource(dto.getNewsSource());
+        article.getTags().clear(); // Clear existing tags
 
-        if (dto.getNewsStatus() != null)
-            news.setNewsStatus(dto.getNewsStatus());
+        if (request.getTagIds() != null && !request.getTagIds().isEmpty()) {
+            for (Long tagId : request.getTagIds()) {
+                Tag tag = tagRepo.findById(tagId)
+                        .orElseThrow(() -> new RuntimeException("Tag not found: " + tagId));
+                article.getTags().add(tag);
+            }
+        }
 
-        if (dto.getCategoryId() != null)
-            news.setCategory(categoryRepo.findById(dto.getCategoryId()).orElse(null));
-
-        if (dto.getTagIds() != null)
-            news.setTags(new HashSet<>(tagRepo.findAllById(dto.getTagIds())));
-
-        news.setUpdatedBy(updater);
-        news.setModifiedDate(LocalDateTime.now());
-
-        return articleRepo.save(news);
+        return articleRepo.save(article);
     }
 
     @Override

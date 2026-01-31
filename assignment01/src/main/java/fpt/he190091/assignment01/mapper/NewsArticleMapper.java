@@ -21,30 +21,49 @@ public class NewsArticleMapper {
         res.setNewsContent(article.getNewsContent());
         res.setNewsSource(article.getNewsSource());
         res.setNewsStatus(article.getNewsStatus());
+        res.setCreatedDate(article.getCreatedDate());
+        res.setModifiedDate(article.getModifiedDate());
 
+        // Safe category mapping
         if (article.getCategory() != null) {
             res.setCategoryId(article.getCategory().getCategoryID());
+            res.setCategoryName(article.getCategory().getCategoryName());
         }
 
-        if (article.getTags() != null) {
-            res.setTagIds(
-                    article.getTags()
-                            .stream()
-                            .map(Tag::getTagID)
-                            .toList()
-            );
-        } else {
-            res.setTagIds(List.of());
-        }
-
+        // Safe author mapping
         if (article.getCreatedBy() != null) {
-            res.setAuthorId(article.getCreatedBy().getAccountID());
+            res.setAuthorName(article.getCreatedBy().getAccountName());
+        }
+
+        // Tags mapping
+        try {
+            if (article.getTags() != null && !article.getTags().isEmpty()) {
+                res.setTagIds(
+                        article.getTags().stream()
+                                .map(Tag::getTagID)
+                                .toList()
+                );
+                res.setTagNames(
+                        article.getTags().stream()
+                                .map(Tag::getTagName)
+                                .toList()
+                );
+            } else {
+                res.setTagIds(List.of());
+                res.setTagNames(List.of());
+            }
+        } catch (Exception e) {
+            res.setTagIds(List.of());
+            res.setTagNames(List.of());
         }
 
         return res;
     }
 
     public List<NewsArticleResponse> toResponseList(List<NewsArticle> articles) {
-        return articles.stream().map(this::toResponse).toList();
+        if (articles == null) return List.of();
+        return articles.stream()
+                .map(this::toResponse)
+                .toList();
     }
 }

@@ -13,5 +13,4 @@ public class CategoryRequest {
     private String categoryDescription;
     private Boolean isActive;
     private Long parentCategoryId;
-//    private List<Category> subCategories;
 }

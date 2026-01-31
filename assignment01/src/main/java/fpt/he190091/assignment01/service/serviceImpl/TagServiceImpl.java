@@ -7,11 +7,13 @@ import fpt.he190091.assignment01.repository.TagRepository;
 import fpt.he190091.assignment01.service.TagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @RequiredArgsConstructor
 @Service
+@Transactional(readOnly = true)
 public class TagServiceImpl implements TagService {
     private final TagRepository tagRepo;
 
@@ -31,6 +33,7 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
+    @Transactional
     public Tag createTag(TagRequest dto) {
         Tag tag = new Tag();
         tag.setTagName(dto.getTagName());
@@ -40,11 +43,13 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
+    @Transactional
     public void deleteTag(Long id) {
         tagRepo.deleteById(id);
     }
 
     @Override
+    @Transactional
     public Tag updateTag(Long id, TagRequest dto) {
         Tag tag = tagRepo.findById(id).orElse(null);
         if (tag == null) return null;

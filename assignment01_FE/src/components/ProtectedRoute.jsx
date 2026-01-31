@@ -1,7 +1,20 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-export default function ProtectedRoute() {
-  const isLoggedIn = true; // TEMP — replace with /auth/me later
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
 
-  return isLoggedIn ? <Outlet /> : <Navigate to="/login" />;
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return user ? children : <Navigate to="/login" />;
 }
+
+export default ProtectedRoute;

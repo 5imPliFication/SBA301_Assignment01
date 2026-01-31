@@ -8,9 +8,9 @@ import lombok.NoArgsConstructor;
 
 @Data
 public class SystemAccountResponse {
-    private Long accountId;
-    private String accountEmail;
-    private String accountName;
-    private Integer accountRole;
+    private Long id;
+    private String email;
+    private String name;
+    private Integer role;
 }
 

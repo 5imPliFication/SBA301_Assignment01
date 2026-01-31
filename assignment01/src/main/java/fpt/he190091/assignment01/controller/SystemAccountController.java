@@ -49,9 +49,8 @@ public class SystemAccountController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteAccount(@PathVariable Long id) {
+    public void deleteAccount(@PathVariable Long id) {
         systemAccountService.deleteSystemAccount(id);
-        return ResponseEntity.ok("Deleted");
     }
 
     @PostMapping("/login")
@@ -64,5 +63,10 @@ public class SystemAccountController {
                     return ResponseEntity.ok("Login success");
                 })
                 .orElse(ResponseEntity.status(401).body("Invalid credentials"));
+    }
+
+    @PostMapping("/logout")
+    public void logout(HttpSession session) {
+        session.removeAttribute("user");
     }
 }

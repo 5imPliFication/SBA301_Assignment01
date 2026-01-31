@@ -13,7 +13,6 @@ public class NewsArticleRequest {
     private String newsContent;
     private String newsSource;
     private Boolean newsStatus;
-
     private Long categoryId;
     private Set<Long> tagIds;
 }

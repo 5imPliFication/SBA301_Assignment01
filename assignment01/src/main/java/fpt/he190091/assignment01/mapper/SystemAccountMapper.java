@@ -12,10 +12,10 @@ public class SystemAccountMapper {
         if (acc == null) return null;
 
         SystemAccountResponse res = new SystemAccountResponse();
-        res.setAccountId(acc.getAccountID());
-        res.setAccountEmail(acc.getAccountEmail());
-        res.setAccountName(acc.getAccountName());
-        res.setAccountRole(acc.getAccountRole());
+        res.setId(acc.getAccountID());
+        res.setEmail(acc.getAccountEmail());
+        res.setName(acc.getAccountName());
+        res.setRole(acc.getAccountRole());
 
         return res;
     }
